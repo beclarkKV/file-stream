@@ -1,0 +1,16 @@
+{
+  "_checkout": "develop",
+  "_output_dir": "/home/clark/repos",
+  "_repo_dir": "/home/clark/.cookiecutters/cookiecutter-hypermodern-python",
+  "_template": "gh:56kyle/cookiecutter-hypermodern-python",
+  "author": "Benjamin Clark",
+  "copyright_year": "2025",
+  "development_status": "Development Status :: 1 - Planning",
+  "email": "beclark@kinetic-vision.com",
+  "friendly_name": "File Stream",
+  "github_user": "beclarkkv",
+  "license": "MIT",
+  "package_name": "file_stream",
+  "project_name": "file-stream",
+  "version": "0.0.0"
+}
