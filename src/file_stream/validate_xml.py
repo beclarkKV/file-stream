@@ -10,5 +10,8 @@ def validate_transferProtocol(transferProtocol: Element) -> bool:
 def validate_application(application: Element) -> bool:
     pass
 
-def verify_attrib(element: Element, allowed_attrib: dict) -> bool:
-    pass
+def verify_attrib(element: Element, allowed_attrib: list) -> bool:
+    for attrib in element.attrib.keys():
+        if attrib not in allowed_attrib:
+            return False
+    return True
