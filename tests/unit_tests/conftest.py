@@ -45,3 +45,43 @@ def invalid_versions():
                  '''
    root = ET.fromstring(xml_string)
    return root
+
+@pytest.fixture
+def valid_octets():
+    xml_string = '''<octetsType>
+    <octets>5000</octets>
+</octetsType>'''
+    root = ET.fromstring(xml_string)
+    return root
+
+@pytest.fixture
+def invalid_octets():
+    xml_string = '''<octetsType>
+    <octets>-5000</octets>
+</octetsType>'''
+    root = ET.fromstring(xml_string)
+    return root
+
+@pytest.fixture
+def valid_size():
+    xml_string = '''<?xml version="1.0" encoding="UTF-8"?>
+   <size xmlns="urn:ietf:params:xml:ns:iris-transport">
+     <response>
+       <octets>1211</octets>
+     </response>
+   </size>'''
+    root = ET.fromstring(xml_string)
+    return root
+
+
+@pytest.fixture
+def invalid_size():
+    xml_string = '''<?xml version="1.0" encoding="UTF-8"?>
+    <size xmlns="urn:ietf:params:xml:ns:iris-transport">
+     <response invalid = 'True'>
+       <octets>1211</octets>
+     </response>
+   </size>'''
+    root = ET.fromstring(xml_string)
+    return root
+
