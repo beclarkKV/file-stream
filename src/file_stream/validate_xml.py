@@ -68,36 +68,63 @@ def validate_size(root: Element) -> bool:
             return False
     return req_count <= 1 and res_count <= 1
     
-    
+
 def validate_authenticationSuccess(root: Element) -> bool:
     data_count = 0
+    description_languages = []
     for child in root:
-        if child.tag != '{urn:ietf:params:xml:ns:iris-transport}description' and child.tag != '{urn:ietf:params:xml:ns:iris-transport}data':
+        if child.tag == '{urn:ietf:params:xml:ns:iris-transport}description' and child.attrib.keys() != {'language'}:
             return False
-        elif child.tag == 'data':
+        
+        elif child.tag == '{urn:ietf:params:xml:ns:iris-transport}data':
             data_count += 1
+        
+        description_languages.append(child.attrib['language'])
+    
     if data_count > 1:
+        return False
+    
+    if len(description_languages) != len(set(description_languages)):
+        return False
+    
+    return True
+
+
+def validate_authenticationFailure(root: Element) -> bool:
+    description_languages = []
+    for child in root:
+        if child.tag == '{urn:ietf:params:xml:ns:iris-transport}description' and child.attrib.keys() != {'language'}:
+            return False
+        description_languages.append(child.attrib['language'])
+    if len(description_languages) != len(set(description_languages)):
         return False
     return True
 
 
+
+def validate_other(root: Element) -> bool:
+    pass
 
 
 def validate_xml(xml: str) -> bool:
     file = ET.parse(xml)
     root = file.getroot()
     name = re.sub(r'\{.*?\}', '', root.tag)
-    name = name.lower()
     if name == 'versions':
         return validate_versions(root)
+    
     elif name == 'size':
         return validate_size(root)
+    
     elif name == 'authenticationSuccess':
-        pass
+        return validate_authenticationSuccess(root)
+    
     elif name == 'authenticationFailure':
-        pass
+        return validate_authenticationFailure(root)
+    
     elif name == 'other':
-        pass
+        return validate_other(root)
+    
     else:
         pass
     
@@ -106,5 +133,5 @@ def validate_xml(xml: str) -> bool:
 xml = ET.parse('invalid.xml')
 root = xml.getroot()
 
-print(validate_authenticationSuccess(root))
+print(validate_xml('invalid.xml'))
         
