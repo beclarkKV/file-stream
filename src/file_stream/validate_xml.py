@@ -101,9 +101,8 @@ def validate_authenticationFailure(root: Element) -> bool:
     return True
 
 
-
 def validate_other(root: Element) -> bool:
-    pass
+    return validate_authenticationFailure(root)
 
 
 def validate_xml(xml: str) -> bool:
@@ -126,12 +125,7 @@ def validate_xml(xml: str) -> bool:
         return validate_other(root)
     
     else:
-        pass
+        raise('not a iris conformant xml')
     
 
 
-xml = ET.parse('invalid.xml')
-root = xml.getroot()
-
-print(validate_xml('invalid.xml'))
-        
