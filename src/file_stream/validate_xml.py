@@ -1,16 +1,65 @@
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import Element
 import re
+from typing import List, Tuple, Optional, Dict, Set
 
 
+class AttribObject:
+    """
+    Defines requirements for XML element attributes.
+    
+    Attributes:
+        name: The name of the attribute
+        amount_required: Minimum number of times this attribute must appear
+        max_amount: Maximum number of times this attribute can appear (default: 1)
+    """
+    def __init__(self, name: str, amount_required: int = 1, max_amount: int = 1):
+        if amount_required < 0:
+            raise ValueError("amount_required cannot be negative")
+        if max_amount < amount_required:
+            raise ValueError("max_amount cannot be less than amount_required")
+            
+        self.name = name
+        self.amount_required = amount_required
+        self.max_amount = max_amount
 
-def verify_attrib(element: Element, allowed_attrib: list) -> bool:
-    if allowed_attrib[0] not in element.attrib.keys():
-        return False
-    for attrib in element.attrib.keys():
-        if attrib not in allowed_attrib:
-            return False
-    return True
+    def __str__(self) -> str:
+        return f"AttribObject(name='{self.name}', required={self.amount_required}, max={self.max_amount})"
+
+
+def verify_attrib(element: Element, allowed_attrib: List[AttribObject]) -> Tuple[bool, Optional[str]]:
+    """
+    Verify that an element's attributes meet the requirements defined by AttribObjects.
+    
+    Args:
+        element: The XML element to verify
+        allowed_attrib: List of AttribObject defining attribute requirements
+        
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    # Get all attribute names from the element
+    element_attribs = set(element.attrib.keys())
+    
+    # Track which attributes we've validated
+    validated_attribs = set()
+    
+    # Check each required attribute
+    for attrib in allowed_attrib:
+        count = element_attribs.count(attrib.name)
+        validated_attribs.add(attrib.name)
+        
+        if count < attrib.amount_required:
+            return False, f"Missing required attribute '{attrib.name}' (found {count}, required {attrib.amount_required})"
+        if count > attrib.max_amount:
+            return False, f"Too many occurrences of attribute '{attrib.name}' (found {count}, max {attrib.max_amount})"
+    
+    # Check for unexpected attributes
+    unexpected = element_attribs - validated_attribs
+    if unexpected:
+        return False, f"Unexpected attributes found: {', '.join(unexpected)}"
+    
+    return True, None
 
 
 def verify_element(element: Element, required_tag: str, allowed_attrib: list) -> bool:
