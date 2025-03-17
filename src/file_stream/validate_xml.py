@@ -68,6 +68,18 @@ def validate_size(root: Element) -> bool:
             return False
     return req_count <= 1 and res_count <= 1
     
+    
+def validate_authenticationSuccess(root: Element) -> bool:
+    data_count = 0
+    for child in root:
+        if child.tag != '{urn:ietf:params:xml:ns:iris-transport}description' and child.tag != '{urn:ietf:params:xml:ns:iris-transport}data':
+            return False
+        elif child.tag == 'data':
+            data_count += 1
+    if data_count > 1:
+        return False
+    return True
+
 
 
 
@@ -91,8 +103,8 @@ def validate_xml(xml: str) -> bool:
     
 
 
-xml = ET.parse('fixable.xml')
+xml = ET.parse('invalid.xml')
 root = xml.getroot()
 
-print(validate_size(root))
+print(validate_authenticationSuccess(root))
         
