@@ -105,9 +105,18 @@ def validate_other(root: Element) -> bool:
     return validate_authenticationFailure(root)
 
 
+
 def validate_xml(xml: str) -> bool:
-    file = ET.parse(xml)
-    root = file.getroot()
+    try:
+        file = ET.parse(xml)
+        root = file.getroot()
+    except ET.ParseError as e:
+        print(f'XML parsing error: {e}')
+        return False
+    except FileNotFoundError:
+        print('Error: File not found')
+        return False
+    
     name = re.sub(r'\{.*?\}', '', root.tag)
     if name == 'versions':
         return validate_versions(root)
