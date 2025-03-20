@@ -14,6 +14,7 @@ from src.file_stream.validate_xml import validate_versions
 from src.file_stream.validate_xml import verify_attrib
 from src.file_stream.validate_xml import verify_element
 from src.file_stream.validate_xml import verify_octetsType
+from src.file_stream.validate_xml import validate_xml
 
 
 def test_verify_attrib(sample_root):
@@ -244,3 +245,15 @@ def test_validate_authenticationFailure(
         validate_authenticationFailure(valid_authenticationFailure, 'sample.xml')
     except Exception as e:
         pytest.fail(f'unexpected error with validate_authenticationFailure Error: {e}')
+
+
+def test_validate_xml():
+    file_path = '/home/clark/repos/file-stream/FILES/'
+    try:
+        validate_xml((file_path + 'versions-example.xml') )
+        validate_xml((file_path + 'size-example.xml'))
+        validate_xml((file_path + 'authenticationSuccess-example.xml'))
+        validate_xml((file_path + 'authenticationFailure-example.xml'))
+        validate_xml((file_path + 'other-example.xml'))
+    except Exception as e:
+        pytest.fail(f'unexpected error Error: {e}')

@@ -183,7 +183,18 @@ def validate_authenticationFailure(root: Element, file_name):
 
 
 def validate_other(root: Element, file_name):
-    validate_authenticationFailure(root, file_name)
+    allowed_elements = [
+        ElementObject("{urn:ietf:params:xml:ns:iris-transport}description", 0, None),
+    ]
+    verify_element(root, allowed_elements, file_name)
+    verify_attrib(root, [AttribObject('type', True)], file_name)
+    description_languages = []
+    for child in root:
+        verify_attrib(child, [AttribObject("language", True)], file_name)
+        verify_element(child, [], file_name)
+        description_languages.append(child.attrib['language'])
+    if len(description_languages) != len(set(description_languages)):
+        raise ElementError("Each description element does not have a unique language", file_name, 0)
 
 
 def validate_xml(file_name = 'unknown file'):
