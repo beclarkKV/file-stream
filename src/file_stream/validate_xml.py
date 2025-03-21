@@ -2,9 +2,10 @@ import base64
 import re
 import xml.etree.ElementTree as ET
 from typing import List
-from typing import Tuple
 from xml.etree.ElementTree import Element
+from dataclasses import dataclass
 
+NAMESPACE = "{urn:ietf:params:xml:ns:iris-transport}"
 
 class XMLAttributeError(Exception):
     def __init__(self, message, file_name, line_num):
@@ -26,17 +27,17 @@ class ElementError(Exception):
         return f"{self.message} in {self.file_name} at line {self.line_num}"    
 
 
+@dataclass
 class AttribObject:
-    def __init__(self, name: str, required=False):
-        self.name = name
-        self.required = required
+    name: str
+    required: bool = False
 
 
+@dataclass
 class ElementObject:
-    def __init__(self, name: str, min_occur=1, max_occur=1):
-        self.name = name
-        self.min_occur = min_occur
-        self.max_occur = max_occur
+    name: str
+    min_occur: int = 1
+    max_occur: int = 1
 
 
 def isBase64(s):
@@ -76,7 +77,7 @@ def verify_element(element: Element, required_elements: List[ElementObject], fil
 def validate_versions(root: Element, file_name):
     verify_attrib(root, [], file_name)
     # verifies the children of the versions root are all = to transferprotocol
-    verify_element(root, [ElementObject("{urn:ietf:params:xml:ns:iris-transport}transferProtocol", 1, None)], file_name)
+    verify_element(root, [ElementObject(f"{NAMESPACE}transferProtocol", 1, None)], file_name)
     for transferprotocol in root:
         validate_transferProtocol(transferprotocol, file_name)
         for application in transferprotocol:
@@ -94,13 +95,13 @@ def validate_transferProtocol(transferprotocol: Element, file_name):
         AttribObject("responseSizeOctets"),
         AttribObject("requestSizeOctets"),
     ]
-    verify_element(transferprotocol, [ElementObject("{urn:ietf:params:xml:ns:iris-transport}application", 0, None)], file_name)
+    verify_element(transferprotocol, [ElementObject(f"{NAMESPACE}application", 0, None)], file_name)
     verify_attrib(transferprotocol, allowed_attrib, file_name)
 
 
 def validate_application(application: Element, file_name):
     allowed_attrib = [AttribObject("protocolId", True), AttribObject("extensionIds")]
-    verify_element(application, [ElementObject("{urn:ietf:params:xml:ns:iris-transport}dataModel", 0, None)], file_name)
+    verify_element(application, [ElementObject(f"{NAMESPACE}dataModel", 0, None)], file_name)
     verify_attrib(application, allowed_attrib, file_name)
 
 
@@ -111,10 +112,10 @@ def validate_dataModel(datamodel: Element, file_name):
 
 
 def verify_octetsType(element: Element, file_name):
-    allowed_elements = [ElementObject("{urn:ietf:params:xml:ns:iris-transport}exceedsMaximum",0), ElementObject("{urn:ietf:params:xml:ns:iris-transport}octets",0)]
+    allowed_elements = [ElementObject(f"{NAMESPACE}exceedsMaximum",0), ElementObject(f"{NAMESPACE}octets",0)]
     verify_element(element, allowed_elements, file_name)
-    exceeds = element.find("{urn:ietf:params:xml:ns:iris-transport}exceedsMaximum")
-    octets = element.find("{urn:ietf:params:xml:ns:iris-transport}octets")
+    exceeds = element.find(f"{NAMESPACE}exceedsMaximum")
+    octets = element.find(f"{NAMESPACE}octets")
     if exceeds is not None and octets is not None:
         raise ElementError('Cannot have both "exceedsMaximum" and "octets" types', file_name, 0)
     if octets is not None:
@@ -136,8 +137,8 @@ def verify_octetsType(element: Element, file_name):
 
 def validate_size(root: Element, file_name):
     allowed_elements = [
-        ElementObject("{urn:ietf:params:xml:ns:iris-transport}request", 0, 1),
-        ElementObject("{urn:ietf:params:xml:ns:iris-transport}response", 0, 1),
+        ElementObject(f"{NAMESPACE}request", 0, 1),
+        ElementObject(f"{NAMESPACE}response", 0, 1),
     ]
     verify_element(root, allowed_elements, file_name)
     verify_attrib(root, [], file_name)
@@ -148,17 +149,17 @@ def validate_size(root: Element, file_name):
 
 def validate_authenticationSuccess(root: Element, file_name):
     allowed_elements = [
-        ElementObject("{urn:ietf:params:xml:ns:iris-transport}description", 0, None),
-        ElementObject("{urn:ietf:params:xml:ns:iris-transport}data", 0, 1),
+        ElementObject(f"{NAMESPACE}description", 0, None),
+        ElementObject(f"{NAMESPACE}data", 0, 1),
     ]
     verify_element(root, allowed_elements, file_name)
     verify_attrib(root, [], file_name)
     description_languages = []
     for child in root:
-        if child.tag == "{urn:ietf:params:xml:ns:iris-transport}description":
+        if child.tag == f"{NAMESPACE}description":
             verify_attrib(child, [AttribObject("language", True)], file_name)
             description_languages.append(child.attrib['language'])
-        elif child.tag == "{urn:ietf:params:xml:ns:iris-transport}data":
+        elif child.tag == f"{NAMESPACE}data":
             verify_attrib(child, [], file_name)
             if not isBase64(child.text):
                 raise ElementError("Data value is not base 64", file_name, 0)
@@ -169,7 +170,7 @@ def validate_authenticationSuccess(root: Element, file_name):
 
 def validate_authenticationFailure(root: Element, file_name):
     allowed_elements = [
-        ElementObject("{urn:ietf:params:xml:ns:iris-transport}description", 0, None),
+        ElementObject(f"{NAMESPACE}description", 0, None),
     ]
     verify_element(root, allowed_elements, file_name)
     verify_attrib(root, [], file_name)
@@ -184,7 +185,7 @@ def validate_authenticationFailure(root: Element, file_name):
 
 def validate_other(root: Element, file_name):
     allowed_elements = [
-        ElementObject("{urn:ietf:params:xml:ns:iris-transport}description", 0, None),
+        ElementObject(f"{NAMESPACE}description", 0, None),
     ]
     verify_element(root, allowed_elements, file_name)
     verify_attrib(root, [AttribObject('type', True)], file_name)
