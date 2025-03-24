@@ -11,26 +11,22 @@ from src.file_stream.validate_xml import validate_dataModel
 from src.file_stream.validate_xml import validate_size
 from src.file_stream.validate_xml import validate_transferProtocol
 from src.file_stream.validate_xml import validate_versions
+from src.file_stream.validate_xml import validate_xml
 from src.file_stream.validate_xml import verify_attrib
 from src.file_stream.validate_xml import verify_element
 from src.file_stream.validate_xml import verify_octetsType
-from src.file_stream.validate_xml import validate_xml
 
 
 def test_verify_attrib(sample_root):
     allowed_attrib = [AttribObject("id", 1), AttribObject("name", 1)]
     element = sample_root.find("b")
     element2 = sample_root.find("d")
-    try:
-        verify_attrib(sample_root, allowed_attrib, "sample.xml")
-
-    except XMLAttributeError:
-        pytest.fail("verify_attrib() raised XMLAttributeError unexpectedly")
+    verify_attrib(sample_root, allowed_attrib)
 
     with pytest.raises(XMLAttributeError, match="Unexpected attributes found: "):
-        verify_attrib(element, allowed_attrib, "sample.xml")
+        verify_attrib(element, allowed_attrib)
     with pytest.raises(XMLAttributeError, match="Missing required attribute:"):
-        verify_attrib(element2, allowed_attrib, "sample.xml")
+        verify_attrib(element2, allowed_attrib)
 
 
 def test_verify_element(sample_root):
@@ -42,20 +38,17 @@ def test_verify_element(sample_root):
     element = sample_root.find("b")
     element1 = sample_root.find("c")
     with pytest.raises(ElementError, match="Too many occurences of element:"):
-        verify_element(sample_root, allowed_elements, "sample.xml")
+        verify_element(sample_root, allowed_elements)
     with pytest.raises(ElementError, match="Missing required element:"):
-        verify_element(element, allowed_elements, "sample.xml")
+        verify_element(element, allowed_elements)
     with pytest.raises(ElementError, match="Unexpected elements found:"):
-        verify_element(element1, allowed_elements, "sample.xml")
+        verify_element(element1, allowed_elements)
 
 
 def test_validate_versions(valid_versions, invalid_versions):
-    try:
-        validate_versions(valid_versions, "sample.xml")
-    except Exception as e:
-        pytest.fail(f"validate_versions() raised and unexpected error Error: {e}")
+    validate_versions(valid_versions)
     with pytest.raises(XMLAttributeError):
-        validate_versions(invalid_versions, "sample.xml")
+        validate_versions(invalid_versions)
 
 
 def test_validate_transferProtocol(valid_versions, invalid_versions):
@@ -63,24 +56,16 @@ def test_validate_transferProtocol(valid_versions, invalid_versions):
         "{urn:ietf:params:xml:ns:iris-transport}transferProtocol"
     )
     with pytest.raises(XMLAttributeError, match="Missing required attribute:"):
-        validate_transferProtocol(transfer_protocol_list[0], "sample.xml")
+        validate_transferProtocol(transfer_protocol_list[0])
 
     with pytest.raises(XMLAttributeError, match="Unexpected attributes found:"):
-        validate_transferProtocol(transfer_protocol_list[1], "sample.xml")
+        validate_transferProtocol(transfer_protocol_list[1])
 
     with pytest.raises(ElementError, match="Unexpected elements found:"):
-        validate_transferProtocol(transfer_protocol_list[2], "sample.xml")
-    try:
-        validate_transferProtocol(
-            valid_versions.find(
-                "{urn:ietf:params:xml:ns:iris-transport}transferProtocol"
-            ),
-            "sample.xml",
-        )
-    except Exception as e:
-        pytest.fail(
-            f"unexpected error came up with validate_transferProtocol Error: {e}"
-        )
+        validate_transferProtocol(transfer_protocol_list[2])
+    validate_transferProtocol(
+        valid_versions.find("{urn:ietf:params:xml:ns:iris-transport}transferProtocol"),
+    )
 
 
 def test_validate_application(valid_versions, invalid_versions):
@@ -91,20 +76,16 @@ def test_validate_application(valid_versions, invalid_versions):
         "{urn:ietf:params:xml:ns:iris-transport}application"
     )
     with pytest.raises(XMLAttributeError, match="Unexpected attributes found:"):
-        validate_application(application_list[0], "sample.xml")
+        validate_application(application_list[0])
     with pytest.raises(XMLAttributeError, match="Missing required attribute:"):
-        validate_application(application_list[1], "sample.xml")
+        validate_application(application_list[1])
     with pytest.raises(ElementError, match="Unexpected elements found:"):
-        validate_application(application_list[2], "sample.xml")
-    try:
-        validate_application(
-            valid_versions.find(
-                "{urn:ietf:params:xml:ns:iris-transport}transferProtocol"
-            ).find("{urn:ietf:params:xml:ns:iris-transport}application"),
-            "sample.xml",
-        )
-    except Exception as e:
-        pytest.fail(f"unexpected error came up with validate_application Error: {e}")
+        validate_application(application_list[2])
+    validate_application(
+        valid_versions.find(
+            "{urn:ietf:params:xml:ns:iris-transport}transferProtocol"
+        ).find("{urn:ietf:params:xml:ns:iris-transport}application"),
+    )
 
 
 def test_validate_dataModel(valid_versions, invalid_versions):
@@ -118,22 +99,16 @@ def test_validate_dataModel(valid_versions, invalid_versions):
         "{urn:ietf:params:xml:ns:iris-transport}dataModel"
     )
     with pytest.raises(XMLAttributeError, match="Unexpected attributes found:"):
-        validate_dataModel(data_model_list[1], "sample.xml")
+        validate_dataModel(data_model_list[1])
     with pytest.raises(XMLAttributeError, match="Missing required attribute:"):
-        validate_dataModel(data_model_list[0], "sample.xml")
+        validate_dataModel(data_model_list[0])
     with pytest.raises(ElementError, match="Unexpected elements found:"):
-        validate_dataModel(data_model_list[2], "sample.xml")
-    try:
-        validate_dataModel(
-            valid_versions.find(
-                "{urn:ietf:params:xml:ns:iris-transport}transferProtocol"
-            )
-            .find("{urn:ietf:params:xml:ns:iris-transport}application")
-            .find("{urn:ietf:params:xml:ns:iris-transport}dataModel"),
-            "sample.xml",
-        )
-    except Exception as e:
-        pytest.fail(f"unexpected error came up with validate_dataModel Error: {e}")
+        validate_dataModel(data_model_list[2])
+    validate_dataModel(
+        valid_versions.find("{urn:ietf:params:xml:ns:iris-transport}transferProtocol")
+        .find("{urn:ietf:params:xml:ns:iris-transport}application")
+        .find("{urn:ietf:params:xml:ns:iris-transport}dataModel"),
+    )
 
 
 def test_verify_octetsType(valid_size, invalid_size):
@@ -142,13 +117,11 @@ def test_verify_octetsType(valid_size, invalid_size):
     ):
         verify_octetsType(
             invalid_size[0].find("{urn:ietf:params:xml:ns:iris-transport}response"),
-            "sample.xml",
         )
 
     with pytest.raises(ElementError, match="octets value is not an integer."):
         verify_octetsType(
             invalid_size[1].find("{urn:ietf:params:xml:ns:iris-transport}response"),
-            "sample.xml",
         )
 
     with pytest.raises(
@@ -156,104 +129,88 @@ def test_verify_octetsType(valid_size, invalid_size):
     ):
         verify_octetsType(
             invalid_size[4].find("{urn:ietf:params:xml:ns:iris-transport}response"),
-            "sample.xml",
         )
 
-    try:
-        verify_octetsType(
-            valid_size.find("{urn:ietf:params:xml:ns:iris-transport}response"),
-            "sample.xml",
-        )
-    except Exception as e:
-        pytest.fail(f"verify_octets raised an unexpected error Error: {e}")
+    verify_octetsType(
+        valid_size.find("{urn:ietf:params:xml:ns:iris-transport}response"),
+    )
 
 
 def test_validate_size(valid_size, invalid_size):
     with pytest.raises(
         ElementError, match="Cannot have octets value less than or equal to 0."
     ):
-        validate_size(invalid_size[0], "sample.xml")
+        validate_size(invalid_size[0])
 
     with pytest.raises(ElementError, match="octets value is not an integer."):
-        validate_size(invalid_size[1], "sample.xml")
+        validate_size(invalid_size[1])
 
     with pytest.raises(XMLAttributeError, match="Unexpected attributes found:"):
-        validate_size(invalid_size[2], "sample.xml")
+        validate_size(invalid_size[2])
 
     with pytest.raises(ElementError, match="Unexpected elements found:"):
-        validate_size(invalid_size[3], "sample.xml")
+        validate_size(invalid_size[3])
 
     with pytest.raises(
         ElementError, match='Cannot have both "exceedsMaximum" and "octets" types'
     ):
-        validate_size(invalid_size[4], "sample.xml")
+        validate_size(invalid_size[4])
 
     with pytest.raises(XMLAttributeError, match="Unexpected attributes found:"):
-        validate_size(invalid_size[5], "sample.xml")
+        validate_size(invalid_size[5])
 
-    try:
-        validate_size(valid_size, "sample.xml")
-    except Exception as e:
-        pytest.fail(f"unexpected error in validate_size Error: {e}")
+    validate_size(valid_size)
 
 
 def test_validate_authenticationSuccess(
     valid_authenticationSuccess, invalid_authenticationSuccess
 ):
     with pytest.raises(XMLAttributeError, match="Unexpected attributes found:"):
-        validate_authenticationSuccess(invalid_authenticationSuccess[0], "sample.xml")
+        validate_authenticationSuccess(invalid_authenticationSuccess[0])
     with pytest.raises(XMLAttributeError, match="Unexpected attributes found:"):
-        validate_authenticationSuccess(invalid_authenticationSuccess[1], "sample.xml")
+        validate_authenticationSuccess(invalid_authenticationSuccess[1])
     with pytest.raises(XMLAttributeError, match="Unexpected attributes found:"):
-        validate_authenticationSuccess(invalid_authenticationSuccess[2], "sample.xml")
+        validate_authenticationSuccess(invalid_authenticationSuccess[2])
     with pytest.raises(ElementError, match="Unexpected elements found:"):
-        validate_authenticationSuccess(invalid_authenticationSuccess[3], "sample.xml")
+        validate_authenticationSuccess(invalid_authenticationSuccess[3])
     with pytest.raises(ElementError, match="Unexpected elements found:"):
-        validate_authenticationSuccess(invalid_authenticationSuccess[4], "sample.xml")
+        validate_authenticationSuccess(invalid_authenticationSuccess[4])
     with pytest.raises(
         ElementError, match="Each description element does not have a unique language"
     ):
-        validate_authenticationSuccess(invalid_authenticationSuccess[5], "sample.xml")
+        validate_authenticationSuccess(invalid_authenticationSuccess[5])
     with pytest.raises(ElementError, match="Data value is not base 64"):
-        validate_authenticationSuccess(invalid_authenticationSuccess[6], "sample.xml")
+        validate_authenticationSuccess(invalid_authenticationSuccess[6])
     with pytest.raises(XMLAttributeError, match="Missing required attribute:"):
-        validate_authenticationSuccess(invalid_authenticationSuccess[7], "sample.xml")
-    try:
-        validate_authenticationSuccess(valid_authenticationSuccess, "sample.xml")
-    except Exception as e:
-        pytest.fail(f"unexpected error with validate_authenticationSuccess Error: {e}")
+        validate_authenticationSuccess(invalid_authenticationSuccess[7])
+    validate_authenticationSuccess(valid_authenticationSuccess)
 
 
 def test_validate_authenticationFailure(
     valid_authenticationFailure, invalid_authenticationFailure
 ):
     with pytest.raises(XMLAttributeError, match="Unexpected attributes found:"):
-        validate_authenticationFailure(invalid_authenticationFailure[0], "sample.xml")
+        validate_authenticationFailure(invalid_authenticationFailure[0])
     with pytest.raises(XMLAttributeError, match="Unexpected attributes found:"):
-        validate_authenticationFailure(invalid_authenticationFailure[1], "sample.xml")
+        validate_authenticationFailure(invalid_authenticationFailure[1])
     with pytest.raises(ElementError, match="Unexpected elements found:"):
-        validate_authenticationFailure(invalid_authenticationFailure[2], "sample.xml")
+        validate_authenticationFailure(invalid_authenticationFailure[2])
     with pytest.raises(
         ElementError, match="Each description element does not have a unique language"
     ):
-        validate_authenticationFailure(invalid_authenticationFailure[3], "sample.xml")
+        validate_authenticationFailure(invalid_authenticationFailure[3])
     with pytest.raises(ElementError, match="Unexpected elements found:"):
-        validate_authenticationFailure(invalid_authenticationFailure[4], "sample.xml")
+        validate_authenticationFailure(invalid_authenticationFailure[4])
     with pytest.raises(XMLAttributeError, match="Missing required attribute:"):
-        validate_authenticationFailure(invalid_authenticationFailure[5], "sample.xml")
-    try:
-        validate_authenticationFailure(valid_authenticationFailure, 'sample.xml')
-    except Exception as e:
-        pytest.fail(f'unexpected error with validate_authenticationFailure Error: {e}')
+        validate_authenticationFailure(invalid_authenticationFailure[5])
+    validate_authenticationFailure(valid_authenticationFailure)
 
 
 def test_validate_xml():
-    file_path = '/home/clark/repos/file-stream/FILES/'
-    try:
-        validate_xml((file_path + 'versions-example.xml') )
-        validate_xml((file_path + 'size-example.xml'))
-        validate_xml((file_path + 'authenticationSuccess-example.xml'))
-        validate_xml((file_path + 'authenticationFailure-example.xml'))
-        validate_xml((file_path + 'other-example.xml'))
-    except Exception as e:
-        pytest.fail(f'unexpected error Error: {e}')
+    file_path = "/home/clark/repos/file-stream/FILES/"
+
+    validate_xml(file_path + "versions-example.xml")
+    validate_xml(file_path + "size-example.xml")
+    validate_xml(file_path + "authenticationSuccess-example.xml")
+    validate_xml(file_path + "authenticationFailure-example.xml")
+    validate_xml(file_path + "other-example.xml")
