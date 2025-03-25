@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<size xmlns="urn:ietf:params:xml:ns:iris-transport">
+    <request>
+        <octets>512</octets>
+    </request>
+    <response>
+        <exceedsMaximum/>
+    </response>
+</size>

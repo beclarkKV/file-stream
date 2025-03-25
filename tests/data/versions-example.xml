@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<versions xmlns="urn:ietf:params:xml:ns:iris-transport">
+    <transferProtocol protocolId="HTTP/1.1" extensionIds="ext1 ext2" authenticationIds="auth1 auth2" responseSizeOctets="2048" requestSizeOctets="1024">
+        <application protocolId="APP/1.0" extensionIds="app-ext1 app-ext2">
+            <dataModel protocolId="DM/1.0" extensionIds="dm-ext1 dm-ext2"/>
+            <dataModel protocolId="DM/2.0"/>
+        </application>
+        <application protocolId="APP/2.0"/>
+    </transferProtocol>
+</versions>

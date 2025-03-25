@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<authenticationFailure xmlns="urn:ietf:params:xml:ns:iris-transport">
+    <description language="en">Invalid credentials</description>
+    <description language="fr">Identifiants invalides</description>
+</authenticationFailure>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<other xmlns="urn:ietf:params:xml:ns:iris-transport" type="custom">
+    <description language="en">This is a custom type description.</description>
+</other>
