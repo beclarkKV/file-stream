@@ -1,0 +1,135 @@
+<?xml version="1.0"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+           xmlns:iristrans="urn:ietf:params:xml:ns:iris-transport"
+           targetNamespace="urn:ietf:params:xml:ns:iris-transport"
+           elementFormDefault="qualified" >
+
+   
+    <annotation>
+         <documentation>
+           A schema for describing status information
+           for use by multiple transfer protocols.
+         </documentation>
+    </annotation>
+    
+    <element name="versions">
+         <complexType>
+           <sequence>
+             <element name="transferProtocol" maxOccurs="unbounded">
+               <complexType>
+                 <sequence>
+                   <element name="application" minOccurs="0"
+                     maxOccurs="unbounded">
+                     <complexType>
+                       <sequence>
+                         <element name="dataModel" minOccurs="0"
+                           maxOccurs="unbounded">
+                           <complexType>
+                             <attribute name="protocolId" type="token"
+                               use="required" />
+                             <attribute name="extensionIds"
+                               type="normalizedString" />
+                           </complexType>
+                         </element>
+                       </sequence>
+                       <attribute name="protocolId" type="token"
+                         use="required" />
+                       <attribute name="extensionIds"
+                         type="normalizedString" />
+                     </complexType>
+                   </element>
+                 </sequence>
+                 <attribute name="protocolId" type="token" use="required"/>
+                 <attribute name="extensionIds" type="normalizedString" />
+                 <attribute name="authenticationIds"
+                   type="normalizedString" />
+                 <attribute name="responseSizeOctets"
+                   type="positiveInteger" />
+                 <attribute name="requestSizeOctets"
+                   type="positiveInteger" />
+               </complexType>
+             </element>
+           </sequence>
+         </complexType>
+    </element>
+    
+    <element name="size">
+         <complexType>
+           <sequence>
+             <element name="request"
+               minOccurs="0"
+               type="iristrans:octetsType" />
+             <element name="response"
+               minOccurs="0"
+               type="iristrans:octetsType" />
+           </sequence>
+         </complexType>
+    </element>
+    
+    <complexType name="octetsType">
+         <choice>
+           <element name="exceedsMaximum">
+             <complexType/>
+           </element>
+           <element name="octets" type="positiveInteger" />
+         </choice>
+    </complexType>
+    
+    <element name="authenticationSuccess">
+         <complexType>
+           <sequence>
+             <element name="description" minOccurs="0"
+               maxOccurs="unbounded">
+               <complexType>
+                 <simpleContent>
+                   <extension base="string">
+                     <attribute name="language" type="language"
+                       use="required"/>
+                   </extension>
+                 </simpleContent>
+                 </complexType>
+             </element>
+             <element name="data" minOccurs="0" maxOccurs="1"
+               type="base64Binary"/>
+           </sequence>
+         </complexType>
+    </element>
+    
+    <element name="authenticationFailure">
+      <complexType>
+        <sequence>
+          <element name="description" minOccurs="0"
+            maxOccurs="unbounded">
+            <complexType>
+              <simpleContent>
+                <extension base="string">
+                  <attribute name="language" type="language"
+                    use="required"/>
+                </extension>
+              </simpleContent>
+            </complexType>
+          </element>
+        </sequence>
+      </complexType>
+    </element>
+    
+    <element name="other">
+      <complexType>
+        <sequence>
+          <element name="description" minOccurs="0"
+            maxOccurs="unbounded">
+            <complexType>
+              <simpleContent>
+                <extension base="string">
+                  <attribute name="language" type="language"
+                    use="required"/>
+                </extension>
+              </simpleContent>
+            </complexType>
+          </element>
+        </sequence>
+        <attribute type="token" name="type" use="required"/>
+      </complexType>
+    </element>
+
+</schema>

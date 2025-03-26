@@ -1,17 +1,17 @@
 import base64
 import re
+import sys
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import List
 from xml.etree.ElementTree import Element
-import sys
+
 from loguru import logger
-from file_stream.exceptions import FileValidationError, ElementError , XMLAttributeError
 
+from file_stream.exceptions import ElementError
+from file_stream.exceptions import FileValidationError
+from file_stream.exceptions import XMLAttributeError
 
-logger.remove()
-logger.add(sys.stdout, level="INFO", format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | {message}", colorize=True)
-logger.add("logfile.log", level="INFO", rotation="500 MB", retention="7 days", compression="zip")
 
 NAMESPACE = "{urn:ietf:params:xml:ns:iris-transport}"
 
@@ -39,16 +39,23 @@ def isBase64(s):
 def verify_attrib(element: Element, allowed_attrib: List[AttribObject]):
     logger.trace("verifying correct attributes")
     keys = element.keys()
-    validated_attrib = set()
-    for attrib in allowed_attrib:
-        count = keys.count(attrib.name)
-        validated_attrib.add(attrib.name)
-        if count < 1 and attrib.required:
-            raise XMLAttributeError(f"Missing required attribute: {attrib.name}.", 0)
-    invalid_attrib = set(keys) - validated_attrib
+    validated_attrib = check_required_attrib(allowed_attrib, keys)
+    invalid_attrib = set(keys) - set(validated_attrib)
     if invalid_attrib != set():
         raise XMLAttributeError(f"Unexpected attributes found: {invalid_attrib}", 0)
     logger.debug("attributes valid")
+
+
+def check_required_attrib(
+    allowed_attrib: List[AttribObject], actual_attrib: list
+) -> list:
+    validated_attrib = []
+    for attrib in allowed_attrib:
+        count = actual_attrib.count(attrib.name)
+        validated_attrib.append(attrib.name)
+        if count < 1 and attrib.required:
+            raise XMLAttributeError(f"Missing required attribute: {attrib.name}.", 0)
+    return validated_attrib
 
 
 def verify_element(element: Element, required_elements: List[ElementObject]):
@@ -106,7 +113,7 @@ def validate_transferProtocol(transferprotocol: Element):
     verify_element(
         transferprotocol, [ElementObject(f"{NAMESPACE}application", 0, None)]
     )
-    
+
     verify_attrib(transferprotocol, allowed_attrib)
 
 
@@ -135,25 +142,30 @@ def verify_octetsType(element: Element):
     if exceeds is not None and octets is not None:
         raise ElementError('Cannot have both "exceedsMaximum" and "octets" types', 0)
     if octets is not None:
-        verify_attrib(octets, [])
-        verify_element(octets, [])
-        value = octets.text
-        try:
-            clean_value = value.strip()
-            int_value = int(clean_value)
-            if int_value <= 0:
-                raise ElementError(
-                    f"Cannot have octets value less than or equal to 0. Value: {int_value}",
-                    0,
-                )
-        except ValueError:
-            raise ElementError(f"octets value is not an integer. Value: {value}", 0)
+        verify_octets_child(octets)
 
     elif exceeds is not None:
         verify_attrib(exceeds, [])
         verify_element(exceeds, [])
     logger.debug("octets type is valid")
 
+def verify_octets_child(octets: Element):
+    verify_attrib(octets, [])
+    verify_element(octets, [])
+    value = octets.text
+    verify_octets_value(value)
+
+def verify_octets_value(value: str):
+    try:
+        clean_value = value.strip()
+        int_value = int(clean_value)
+        if int_value <= 0:
+            raise ElementError(
+                f"Cannot have octets value less than or equal to 0. Value: {int_value}",
+                0,
+            )
+    except ValueError:
+        raise ElementError(f"octets value is not an integer. Value: {value}", 0)
 
 def validate_size(root: Element):
     allowed_elements = [
@@ -233,7 +245,7 @@ def validate_other(root: Element):
     ]
     logger.trace("Enter verify 'other' element")
     verify_element(root, allowed_elements)
-    verify_attrib(root, [AttribObject("type", True)]) 
+    verify_attrib(root, [AttribObject("type", True)])
     description_languages = []
     for child in root:
         logger.trace("Enter verify 'description' element")
@@ -299,8 +311,11 @@ def validate_xml(file_name="unknown file"):
             raise FileValidationError(file_name) from e
 
     else:
-        logger.error(f"Root element '{root.tag[len(NAMESPACE):]}' is not IRIS conformant")
+        logger.error(
+            f"Root element '{root.tag[len(NAMESPACE):]}' is not IRIS conformant"
+        )
         raise ElementError("Root element not IRIS conformant:", 2)
     logger.success("XML file validation completed successfully!")
 
-validate_xml('/home/clark/repos/file-stream/tests/data/versions-example.xml')
+
+validate_xml("/home/clark/repos/file-stream/tests/data/versions-example.xml")
