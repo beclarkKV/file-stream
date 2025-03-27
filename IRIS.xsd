@@ -4,14 +4,14 @@
            targetNamespace="urn:ietf:params:xml:ns:iris-transport"
            elementFormDefault="qualified" >
 
-   
+
     <annotation>
          <documentation>
            A schema for describing status information
            for use by multiple transfer protocols.
          </documentation>
     </annotation>
-    
+
     <element name="versions">
          <complexType>
            <sequence>
@@ -52,7 +52,7 @@
            </sequence>
          </complexType>
     </element>
-    
+
     <element name="size">
          <complexType>
            <sequence>
@@ -65,7 +65,7 @@
            </sequence>
          </complexType>
     </element>
-    
+
     <complexType name="octetsType">
          <choice>
            <element name="exceedsMaximum">
@@ -74,7 +74,7 @@
            <element name="octets" type="positiveInteger" />
          </choice>
     </complexType>
-    
+
     <element name="authenticationSuccess">
          <complexType>
            <sequence>
@@ -94,7 +94,7 @@
            </sequence>
          </complexType>
     </element>
-    
+
     <element name="authenticationFailure">
       <complexType>
         <sequence>
@@ -112,7 +112,7 @@
         </sequence>
       </complexType>
     </element>
-    
+
     <element name="other">
       <complexType>
         <sequence>

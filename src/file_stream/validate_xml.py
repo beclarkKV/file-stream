@@ -1,6 +1,5 @@
 import base64
 import re
-import sys
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import List
@@ -149,11 +148,13 @@ def verify_octetsType(element: Element):
         verify_element(exceeds, [])
     logger.debug("octets type is valid")
 
+
 def verify_octets_child(octets: Element):
     verify_attrib(octets, [])
     verify_element(octets, [])
     value = octets.text
     verify_octets_value(value)
+
 
 def verify_octets_value(value: str):
     try:
@@ -166,6 +167,7 @@ def verify_octets_value(value: str):
             )
     except ValueError:
         raise ElementError(f"octets value is not an integer. Value: {value}", 0)
+
 
 def validate_size(root: Element):
     allowed_elements = [

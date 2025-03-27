@@ -29,6 +29,13 @@ def test_verify_attrib(sample_root):
         verify_attrib(element2, allowed_attrib)
 
 
+def test_check_required_attrib(sample_root):
+    element2 = sample_root.find("d")
+    allowed_attrib = [AttribObject("id", 1), AttribObject("name", 1)]
+    with pytest.raises(XMLAttributeError, match="Missing required attribute:"):
+        verify_attrib(element2, allowed_attrib)
+
+
 def test_verify_element(sample_root):
     allowed_elements = [
         ElementObject("b"),
@@ -134,6 +141,34 @@ def test_verify_octetsType(valid_size, invalid_size):
     verify_octetsType(
         valid_size.find("{urn:ietf:params:xml:ns:iris-transport}response"),
     )
+
+
+def test_verify_octets_child(invalid_size):
+    with pytest.raises(ElementError, match="Unexpected elements found:"):
+        validate_size(invalid_size[3])
+    with pytest.raises(ElementError, match="octets value is not an integer."):
+        verify_octetsType(
+            invalid_size[1].find("{urn:ietf:params:xml:ns:iris-transport}response"),
+        )
+    with pytest.raises(
+        ElementError, match="Cannot have octets value less than or equal to 0."
+    ):
+        verify_octetsType(
+            invalid_size[0].find("{urn:ietf:params:xml:ns:iris-transport}response"),
+        )
+
+
+def test_verify_octets_value(invalid_size):
+    with pytest.raises(ElementError, match="octets value is not an integer."):
+        verify_octetsType(
+            invalid_size[1].find("{urn:ietf:params:xml:ns:iris-transport}response"),
+        )
+    with pytest.raises(
+        ElementError, match="Cannot have octets value less than or equal to 0."
+    ):
+        verify_octetsType(
+            invalid_size[0].find("{urn:ietf:params:xml:ns:iris-transport}response"),
+        )
 
 
 def test_validate_size(valid_size, invalid_size):
