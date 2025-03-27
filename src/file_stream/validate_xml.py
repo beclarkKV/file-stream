@@ -193,27 +193,15 @@ def validate_authenticationSuccess(root: Element):
     logger.trace("Enter verify 'authenticationSuccess' element")
     verify_element(root, allowed_elements)
     verify_attrib(root, [])
-    description_languages = []
-    for child in root:
-        if child.tag == f"{NAMESPACE}description":
-            logger.trace("Enter verify 'description' element")
-            verify_attrib(child, [AttribObject("language", True)])
-            description_languages.append(child.attrib["language"])
-        elif child.tag == f"{NAMESPACE}data":
-            logger.trace("Enter verify 'data' element")
-            verify_attrib(child, [])
-            if not isBase64(child.text):
-                raise ElementError("Data value is not base 64", 0)
+    verify_descriptions_element(root)
+    for child in root.findall(f"{NAMESPACE}data"):
+        logger.trace("Enter verify 'data' element")
+        verify_attrib(child, [])
+        if not isBase64(child.text):
+            raise ElementError("Data value is not base 64", 0)
         verify_element(child, [])
         logger.success(f"'{child.tag[len(NAMESPACE):]}' element is valid")
 
-    logger.trace("verifying 'description' element languages are unique")
-    if len(description_languages) != len(set(description_languages)):
-        logger.error("Each description element does not have a unique language")
-        raise ElementError(
-            "Each description element does not have a unique language", 0
-        )
-    logger.debug("'description' elements have unique languages")
     logger.success("'authenticationSuccess' element valid")
 
 
@@ -224,20 +212,7 @@ def validate_authenticationFailure(root: Element):
     logger.trace("Enter verify 'authenticationFailure' element")
     verify_element(root, allowed_elements)
     verify_attrib(root, [])
-    description_languages = []
-    for child in root:
-        logger.trace("Enter verify 'description' element")
-        verify_attrib(child, [AttribObject("language", True)])
-        verify_element(child, [])
-        description_languages.append(child.attrib["language"])
-        logger.success("'description' element is valid")
-    logger.trace("verify 'description' elements have unique language")
-    if len(description_languages) != len(set(description_languages)):
-        logger.error("Each 'description' element does not have a unique language")
-        raise ElementError(
-            "Each description element does not have a unique language", 0
-        )
-    logger.debug("Each 'description' element is unique")
+    verify_descriptions_element(root)
     logger.success("'authenticationFailure' element is valid")
 
 
@@ -248,20 +223,25 @@ def validate_other(root: Element):
     logger.trace("Enter verify 'other' element")
     verify_element(root, allowed_elements)
     verify_attrib(root, [AttribObject("type", True)])
+    verify_descriptions_element(root)
+    logger.success("'other' element is valid")
+
+
+def verify_descriptions_element(root: Element):
     description_languages = []
-    for child in root:
+    for child in root.findall(f"{NAMESPACE}description"):
         logger.trace("Enter verify 'description' element")
         verify_attrib(child, [AttribObject("language", True)])
-        verify_element(child, [])
         description_languages.append(child.attrib["language"])
-        logger.success("'description' element is valid")
-    logger.trace("verify 'description' elements have unique language")
+        verify_element(child, [])
+        logger.success(f"'{child.tag[len(NAMESPACE):]}' element is valid")
+    logger.trace("verifying 'description' element languages are unique")
     if len(description_languages) != len(set(description_languages)):
+        logger.error("Each description element does not have a unique language")
         raise ElementError(
             "Each description element does not have a unique language", 0
         )
-    logger.debug("Each 'description' element is unique")
-    logger.success("'other' element is valid")
+    logger.debug("'description' elements have unique languages")
 
 
 def validate_xml(file_name="unknown file"):
@@ -271,52 +251,32 @@ def validate_xml(file_name="unknown file"):
         root = file.getroot()
     except ET.ParseError as e:
         logger.error(f"XML parsing error in file {file_name}: {e}")
-        return None
-    except FileNotFoundError:
+        raise FileValidationError(file_name) from e
+    except FileNotFoundError as e:
         logger.error(f"Error: File {file_name} not found")
-        return None
+        raise FileValidationError(file_name) from e
 
-    name = re.sub(r"\{.*?\}", "", root.tag)
-    if name == "versions":
-        try:
-            validate_versions(root)
-        except FileValidationError as e:
-            logger.error(f"File {file_name} failed validation, Error: {e}")
-            raise FileValidationError(file_name) from e
+    validation_functions = {
+        "versions": validate_versions,
+        "size": validate_size,
+        "authenticationSuccess": validate_authenticationSuccess,
+        "authenticationFailure": validate_authenticationFailure,
+        "other": validate_other,
+    }
 
-    elif name == "size":
-        try:
-            validate_size(root)
-        except FileValidationError as e:
-            logger.error(f"File {file_name} failed validation, Error: {e}")
-            raise FileValidationError(file_name) from e
+    name = root.tag[len(NAMESPACE) :]
 
-    elif name == "authenticationSuccess":
-        try:
-            validate_authenticationSuccess(root)
-        except FileValidationError as e:
-            logger.error(f"File {file_name} failed validation, Error: {e}")
-            raise FileValidationError(file_name) from e
-
-    elif name == "authenticationFailure":
-        try:
-            validate_authenticationFailure(root)
-        except FileValidationError as e:
-            logger.error(f"File {file_name} failed validation, Error: {e}")
-            raise FileValidationError(file_name) from e
-
-    elif name == "other":
-        try:
-            validate_other(root)
-        except FileValidationError as e:
-            logger.error(f"File {file_name} failed validation, Error: {e}")
-            raise FileValidationError(file_name) from e
-
-    else:
+    if name not in validation_functions.keys():
         logger.error(
             f"Root element '{root.tag[len(NAMESPACE):]}' is not IRIS conformant"
         )
         raise ElementError("Root element not IRIS conformant:", 2)
+    try:
+        validation_functions[name](root)
+    except FileValidationError as e:
+        logger.error(f"File {file_name} failed validation, Error: {e}")
+        raise FileValidationError(file_name) from e
+
     logger.success("XML file validation completed successfully!")
 
 

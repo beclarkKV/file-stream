@@ -242,7 +242,7 @@ def test_validate_authenticationFailure(
 
 
 def test_validate_xml():
-    file_path = "/home/clark/repos/file-stream/FILES/"
+    file_path = "/home/clark/repos/file-stream/tests/data/"
 
     validate_xml(file_path + "versions-example.xml")
     validate_xml(file_path + "size-example.xml")
