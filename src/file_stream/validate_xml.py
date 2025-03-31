@@ -275,7 +275,7 @@ def validate_xml(file_name="unknown file"):
 
     name = root.tag[len(NAMESPACE) :]
 
-    if name not in validation_functions.keys():
+    if name not in validation_functions:
         logger.error(
             f"Root element '{root.tag[len(NAMESPACE):]}' is not IRIS conformant"
         )
