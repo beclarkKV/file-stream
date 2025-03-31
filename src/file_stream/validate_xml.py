@@ -1,9 +1,10 @@
 import base64
-import re
-import xml.etree.ElementTree as ET
+# import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from dataclasses import dataclass
 from typing import List
-from xml.etree.ElementTree import Element
+# from xml.etree.ElementTree import Element
+from lxml.etree import Element
 
 from loguru import logger
 
@@ -27,6 +28,8 @@ class ElementObject:
     min_occur: int = 1
     max_occur: int = 1
 
+def get_line_number(element: Element) -> int:
+    return element.sourceline if hasattr(element, 'sourceline') else 0
 
 def isBase64(s):
     try:
@@ -38,22 +41,22 @@ def isBase64(s):
 def verify_attrib(element: Element, allowed_attrib: List[AttribObject]):
     logger.trace("verifying correct attributes")
     keys = element.keys()
-    validated_attrib = check_required_attrib(allowed_attrib, keys)
+    validated_attrib = check_required_attrib(allowed_attrib, keys, element)
     invalid_attrib = set(keys) - set(validated_attrib)
     if invalid_attrib != set():
-        raise XMLAttributeError(f"Unexpected attributes found: {invalid_attrib}", 0)
+        raise XMLAttributeError(f"Unexpected attributes found: {invalid_attrib}", get_line_number(element))
     logger.debug("attributes valid")
 
 
 def check_required_attrib(
-    allowed_attrib: List[AttribObject], actual_attrib: list
+    allowed_attrib: List[AttribObject], actual_attrib: list, element: Element
 ) -> list:
     validated_attrib = []
     for attrib in allowed_attrib:
         count = actual_attrib.count(attrib.name)
         validated_attrib.append(attrib.name)
         if count < 1 and attrib.required:
-            raise XMLAttributeError(f"Missing required attribute: {attrib.name}.", 0)
+            raise XMLAttributeError(f"Missing required attribute: {attrib.name}.", get_line_number(element))
     return validated_attrib
 
 
@@ -65,18 +68,18 @@ def verify_element(element: Element, required_elements: List[ElementObject]):
         if (child.max_occur is not None) and (count > child.max_occur):
             raise ElementError(
                 f"Too many occurences of element: {child.name}.(found: {count} max: {child.max_occur})",
-                0,
+                get_line_number(element),
             )
         if count < child.min_occur:
             raise ElementError(
                 f"Missing required element: {child.name}. (found: {count}, required: {child.min_occur})",
-                0,
+                get_line_number(element),
             )
     expected_elements = {child.name for child in required_elements}
     actual_elements = {child.tag for child in element}
     if actual_elements - expected_elements != set():
         raise ElementError(
-            f"Unexpected elements found: {actual_elements - expected_elements}", 0
+            f"Unexpected elements found: {actual_elements - expected_elements}", get_line_number(element)
         )
     logger.debug("children valid")
 
@@ -139,7 +142,7 @@ def verify_octetsType(element: Element):
     exceeds = element.find(f"{NAMESPACE}exceedsMaximum")
     octets = element.find(f"{NAMESPACE}octets")
     if exceeds is not None and octets is not None:
-        raise ElementError('Cannot have both "exceedsMaximum" and "octets" types', 0)
+        raise ElementError('Cannot have both "exceedsMaximum" and "octets" types', get_line_number(element))
     if octets is not None:
         verify_octets_child(octets)
 
@@ -198,7 +201,7 @@ def validate_authenticationSuccess(root: Element):
         logger.trace("Enter verify 'data' element")
         verify_attrib(child, [])
         if not isBase64(child.text):
-            raise ElementError("Data value is not base 64", 0)
+            raise ElementError("Data value is not base 64", get_line_number(child))
         verify_element(child, [])
         logger.success(f"'{child.tag[len(NAMESPACE):]}' element is valid")
 
@@ -239,7 +242,7 @@ def verify_descriptions_element(root: Element):
     if len(description_languages) != len(set(description_languages)):
         logger.error("Each description element does not have a unique language")
         raise ElementError(
-            "Each description element does not have a unique language", 0
+            "Each description element does not have a unique language", get_line_number(root)
         )
     logger.debug("'description' elements have unique languages")
 
@@ -270,7 +273,7 @@ def validate_xml(file_name="unknown file"):
         logger.error(
             f"Root element '{root.tag[len(NAMESPACE):]}' is not IRIS conformant"
         )
-        raise ElementError("Root element not IRIS conformant:", 2)
+        raise ElementError("Root element not IRIS conformant:", get_line_number(root))
     try:
         validation_functions[name](root)
     except FileValidationError as e:
