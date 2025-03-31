@@ -1,12 +1,10 @@
 import base64
-# import xml.etree.ElementTree as ET
-from lxml import etree as ET
 from dataclasses import dataclass
 from typing import List
-# from xml.etree.ElementTree import Element
-from lxml.etree import Element
 
 from loguru import logger
+from lxml import etree as ET
+from lxml.etree import Element
 
 from file_stream.exceptions import ElementError
 from file_stream.exceptions import FileValidationError
@@ -28,8 +26,10 @@ class ElementObject:
     min_occur: int = 1
     max_occur: int = 1
 
+
 def get_line_number(element: Element) -> int:
-    return element.sourceline if hasattr(element, 'sourceline') else 0
+    return element.sourceline if hasattr(element, "sourceline") else 0
+
 
 def isBase64(s):
     try:
@@ -40,24 +40,25 @@ def isBase64(s):
 
 def verify_attrib(element: Element, allowed_attrib: List[AttribObject]):
     logger.trace("verifying correct attributes")
-    keys = element.keys()
-    validated_attrib = check_required_attrib(allowed_attrib, keys, element)
-    invalid_attrib = set(keys) - set(validated_attrib)
+    keys = set(element.keys())
+    allowed_names = {attrib.name for attrib in allowed_attrib}
+    check_required_attrib(allowed_attrib, keys, element)
+    invalid_attrib = keys - allowed_names
     if invalid_attrib != set():
-        raise XMLAttributeError(f"Unexpected attributes found: {invalid_attrib}", get_line_number(element))
+        raise XMLAttributeError(
+            f"Unexpected attributes found: {invalid_attrib}", get_line_number(element)
+        )
     logger.debug("attributes valid")
 
 
 def check_required_attrib(
-    allowed_attrib: List[AttribObject], actual_attrib: list, element: Element
+    allowed_attrib: List[AttribObject], actual_attrib: set, element: Element
 ) -> list:
-    validated_attrib = []
-    for attrib in allowed_attrib:
-        count = actual_attrib.count(attrib.name)
-        validated_attrib.append(attrib.name)
-        if count < 1 and attrib.required:
-            raise XMLAttributeError(f"Missing required attribute: {attrib.name}.", get_line_number(element))
-    return validated_attrib
+    required_attrib = {attrib.name for attrib in allowed_attrib if attrib.required}
+    if required_attrib - actual_attrib != set():
+        raise XMLAttributeError(
+            f"Missing required attribute: {required_attrib}.", get_line_number(element)
+        )
 
 
 def verify_element(element: Element, required_elements: List[ElementObject]):
@@ -79,7 +80,8 @@ def verify_element(element: Element, required_elements: List[ElementObject]):
     actual_elements = {child.tag for child in element}
     if actual_elements - expected_elements != set():
         raise ElementError(
-            f"Unexpected elements found: {actual_elements - expected_elements}", get_line_number(element)
+            f"Unexpected elements found: {actual_elements - expected_elements}",
+            get_line_number(element),
         )
     logger.debug("children valid")
 
@@ -142,7 +144,10 @@ def verify_octetsType(element: Element):
     exceeds = element.find(f"{NAMESPACE}exceedsMaximum")
     octets = element.find(f"{NAMESPACE}octets")
     if exceeds is not None and octets is not None:
-        raise ElementError('Cannot have both "exceedsMaximum" and "octets" types', get_line_number(element))
+        raise ElementError(
+            'Cannot have both "exceedsMaximum" and "octets" types',
+            get_line_number(element),
+        )
     if octets is not None:
         verify_octets_child(octets)
 
@@ -242,7 +247,8 @@ def verify_descriptions_element(root: Element):
     if len(description_languages) != len(set(description_languages)):
         logger.error("Each description element does not have a unique language")
         raise ElementError(
-            "Each description element does not have a unique language", get_line_number(root)
+            "Each description element does not have a unique language",
+            get_line_number(root),
         )
     logger.debug("'description' elements have unique languages")
 
@@ -281,6 +287,3 @@ def validate_xml(file_name="unknown file"):
         raise FileValidationError(file_name) from e
 
     logger.success("XML file validation completed successfully!")
-
-
-validate_xml("/home/clark/repos/file-stream/tests/data/versions-example.xml")
